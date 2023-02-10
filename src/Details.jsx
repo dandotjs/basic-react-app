@@ -1,29 +1,27 @@
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { adopt } from "./adoptedPetSlice";
 import Carousel from "./Carousel";
 import ErrorBoundary from "./ErrorBoundary";
-import fetchPet from "./fetchPet";
 import Modal from "./Modal";
+import { useGetPetQuery } from "./petApiService";
 
 const Details = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  // eslint-disable-next-line no-unused-vars
   const [showModal, setShowModal] = useState(false);
-  const results = useQuery(["details", id], fetchPet);
-  const dispatch = useDispatch()
-  if (results.isLoading) {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { isLoading, data: pet } = useGetPetQuery(id);
+
+  if (isLoading) {
     return (
       <div className="loading-pane">
         <h2 className="loader">🌀</h2>
       </div>
     );
   }
-
-  const pet = results.data.pets[0];
 
   return (
     <div className="details">
@@ -38,10 +36,12 @@ const Details = () => {
             <div>
               <h1>Would you like to adopt {pet.name}?</h1>
               <div className="buttons">
-                <button onClick={() => {
-                  dispatch(adopt(pet));
-                  navigate('/');
-                }}>
+                <button
+                  onClick={() => {
+                    dispatch(adopt(pet));
+                    navigate("/");
+                  }}
+                >
                   Yes
                 </button>
                 <button onClick={() => setShowModal(false)}>No</button>

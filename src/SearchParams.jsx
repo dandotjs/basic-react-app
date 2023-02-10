@@ -1,29 +1,24 @@
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { useSelector } from "react-redux";
-import fetchSearch from "./fetchSearch";
+import { useDispatch, useSelector } from "react-redux";
+import { useSearchQuery } from "./petApiService";
 import Results from "./Results";
+import { all } from "./searchParamsSlice";
 import useBreedList from "./useBreedList";
 const ANIMALS = ["bird", "cat", "dog", "rabbit", "reptile"];
 
 const SearchParams = () => {
-  const [requestParams, setRequestParams] = useState({
-    location: "",
-    animal: "",
-    breed: "",
-  });
-
-  const adoptedPet = useSelector(state => state.adoptedPet.value);
   const [animal, setAnimal] = useState("");
   const [breeds] = useBreedList(animal);
+  const dispatch = useDispatch();
+  const adoptedPet = useSelector((state) => state.adoptedPet.value);
+  const searchParams = useSelector((state) => state.searchParams.value);
 
-  const results = useQuery(["search", requestParams], fetchSearch);
-  const pets = results?.data?.pets ?? [];
+  let { data: pets } = useSearchQuery(searchParams);
+  pets = pets ?? [];
 
   return (
     <div className="my-0 mx-auto w-11/12">
-      <form
-        className="p-10 mb-10 rounded-lg bg-gray-200 shadow-lg flex flex-col justify-center items-center"
+      <form  className="p-10 mb-10 rounded-lg bg-gray-200 shadow-lg flex flex-col justify-center items-center"
         onSubmit={(e) => {
           e.preventDefault();
           const formData = new FormData(e.target);
@@ -32,7 +27,7 @@ const SearchParams = () => {
             breed: formData.get("breed") ?? "",
             location: formData.get("location") ?? "",
           };
-          setRequestParams(obj);
+          dispatch(all(obj));
         }}
       >
         {adoptedPet ? (
@@ -42,13 +37,7 @@ const SearchParams = () => {
         ) : null}
         <label htmlFor="location">
           Location
-          <input
-            type="text"
-            id="location"
-            name="location"
-            placeholder="Location"
-            className="search-input"
-          />
+          <input type="text" id="location" name="location" placeholder="Location" className="search-input" />
         </label>
 
         <label htmlFor="animal">
@@ -75,12 +64,7 @@ const SearchParams = () => {
 
         <label htmlFor="breed">
           Breed
-          <select
-            disabled={!breeds.length}
-            id="breed"
-            name="breed"
-            className="search-input grayed-out-disabled"
-          >
+          <select disabled={!breeds.length} id="breed" name="breed" className="search-input grayed-out-disabled">
             <option />
             {breeds.map((breed) => (
               <option key={breed} value={breed}>
@@ -90,9 +74,7 @@ const SearchParams = () => {
           </select>
         </label>
 
-        <button className="rounded px-6 py-2 color text-white hover:opacity-50 border-none bg-orange-500">
-          Submit
-        </button>
+        <button className="rounded px-6 py-2 color text-white hover:opacity-50 border-none bg-orange-500">Submit</button>
       </form>
       <Results pets={pets} />
     </div>
